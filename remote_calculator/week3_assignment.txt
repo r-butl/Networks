@@ -1,0 +1,10 @@
+PREPARATION
+// Accepts a connection from socket listener and passes it to s
+if (s = accept(listener, NULL, NULL)){
+    printf("Accepting error...");
+}
+
+if ( ( byte_recieved = recv(s, buff, 10, 0) ) == -1){
+    printf("Receiving error...\n");
+    exit(1);
+}

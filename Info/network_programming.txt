@@ -1,0 +1,143 @@
+Network Programming
+This information may (or may not) be of use to you throughout the semester. Some items you might already know, while others might be new or a reminder; some apply to every assignment, while others are only useful in some assignments.
+
+Documentation
+There are many sources of documentation for the system calls and library functions you will use throughout the semester. The two most common would be:
+
+Beej's Guide to Network ProgrammingLinks to an external site.
+Linux manual pages (man pages)
+Beej's Guide is good for introductory material on what some functions perform and why you might want to use them. man pages are good for a quick lookup on function details, such as arguments and return values, but they are not a good place to start if you know very little about the function.
+
+When you are exploring functions, try to answer these questions as you consider using it:
+
+What does the function do? Similarly, what does it not do?
+What arguments does it require? What are the data types for each argument? Are any of the arguments optional or do they have a default value?
+What is the return data type? What do different return values mean?
+Programming Hints
+Pointers
+You will use pointers extensively in this class. Become familiar with them. As a reminder, below are some common pointer operators.
+
+Pointer declaration using * (star)
+int *int_p;      // pointer to int
+Address of operator using & (ampersand)
+int a;
+int *int_p = &a; // int_p points to a
+Pointer dereference using * (star)
+int a, b = 5;    // a has an undefined value
+int *int_p = &b; // int_p points to b
+a = *int_p;      // store 5 (b's value) in a through int_p
+You are encouraged to use the compile flags -fsanitize=address -static-libasan, which can help detect memory errors.
+
+Type Casting
+At some points you will need to cast variables to other types. C compilers do a pretty good job of this for base types, but you may have to manually cast at times to clearly describe what is happening and resolve some compiler warnings. Ensure you cast only when you need to and only when you understand why you need to cast. Arbitrarily casting to resolve a compiler warning may lead to data corruption. Casting should be a nearly last resort.
+
+To cast one variable (or expression) to another type, put the new variable type within parenthesis before the variable reference. The segment below casts an int pointer to a char pointer.
+
+int i;
+int *int_p = &i;
+char *char_p = (char*)int_p;
+
+C Data Structures (struct)
+Network programming deals with structs frequently. You'll want to become familiar with using structures and structure elements. As a reminder, common operators follow the struct and variable definitions below.
+
+
+struct student{
+
+    int id;
+
+    float gpa;
+
+    char name[100];
+
+};
+
+
+
+struct student jim, pam;
+Member access operator using . (period)
+jim.id = 5;
+pam.gpa = 3.8;
+Pointer dereference and member access using -> (minus and greater than)
+struct student pam;
+struct student *s_ptr = &pam; // pointer to pam's structure
+s_ptr->id = 8;                // Set pam's id to 8
+C Strings
+Students often have trouble working with strings due to confusion between C strings and C++ strings or between C strings and char arrays. C strings are sequences of bytes (often ASCII-printable values) terminated by a NULL character. That last bit is important and often causes problems. Some clarifications are below.
+
+C string versus char[]
+C strings are related to char arrays since you will most often store a string in one. This gets particularly confusing since most resources say a char[] or char* is a "string." The largest difference is that a C string has a NULL (or '\0') character at the end. Without the NULL, it is an array of char that will get interpreted incorrectly when used as a string.
+C string versus C++ string
+C++ strings are objects of the std::string class, which have many additional functions beyond C strings, such as length and concatenation member functions. C strings do not provide additional functionality since they are only char arrays (with a NULL terminator), but there are many C standard library functions that provide equivalent functionality.
+You are encouraged to use the compile flags -fsanitize=address -static-libasan, which can help detect memory errors with strings.
+char Data Type
+Many students are confused or have a misinterpretation of the char data type. While char often means a character (usually an ASCII character), it can also be used any time you need a small number. Assignment and arithmetic operations are valid on chars, so c = 5; c = c + 1; yields similar results if c is an int or a char. If you prefer, fixed-size integer types, such as uint8_t (unsigned 8-bit integer) and int16_t (signed 16-bit integer), are defined in the header files stdint.h for C and cstdint for C++.
+
+sizeof Operator
+Be careful with the sizeof operator, especially with arrays and pointers.
+
+int *int_p;
+int int_arr[50];
+int_p = int_arr;
+
+sizeof(int_p);  // returns size of a pointer (usually 8)
+sizeof(int_arr); // returns size of the fixed-size array (50*sizeof(int) in this case)
+
+Pointers and Arrays
+Related to the sizeof problem illustrated above, ensure you use pointers and arrays correctly. Below the definitions below are some reminders.
+
+int int_arr[50];
+int *int_p;
+
+Using an array name yields a pointer that references the first element in the array, so int_arr can be used where you need the type int*.
+int_arr has memory associated with it, int_p does not. If you access int_arr (within valid bounds) you will not generate memory errors. If you access (dereference) int_p in the example you will at best get a segfault and at worst corrupt your program in unexpected ways. Always initialize your pointers to a valid location in memory before you use them!
+If you need a pointer to an element within an array, use the address operator (&). &int_arr[10] yields the address of the int at index 10.
+You are encouraged to use the compile flags -fsanitize=address -static-libasan, which can help detect memory errors.
+Byte Order
+Machines store multi-byte data with an organization of the bytes in memory, called the endiannessLinks to an external site.. This becomes important in network programming since the multi-byte data you receive might be in a different order than your machine expects. Use the ntohs, htons, and similar functions when you read or write data in relation to network packets. Packets typically store data using big endian.
+
+Socket API Structures
+The socket API uses several structures among the provided functions. The main structures you use in this class are sockaddr and sockaddr_in. sockaddr structures are general and don't correspond to a particular protocol or method of communication. They are specialized and redefined as needed for each type of communication handled by the socket API. For example, sockaddr_in structures are used when communicating using a socket with the IPv4 protocol. There are many other specialized sockaddr_XX structures.
+
+You can think of sockaddr as the "base type" and sockaddr_in (or other specific structures) as the "derived type." This means that you can always treat a sockaddr_in structure as a sockaddr structure since the important structure fields in sockaddr are present in sockaddr_in. However, you need to verify if a sockaddr structure contains the correct data to treat it as a sockaddr_in (or other) structure. The sa_family field tells you the specific structure "type" stored in a sockaddr. Note that you might need to cast structure pointers to satisfy a compiler's type checking.
+
+Information about important socket structures are:
+
+Structure Name	Usage	man 			Page with Definition				sa_family_t Value
+sockaddr		Old default ("base") structure				bind(2)		N/A
+sockaddr_storage	New default ("base") structure, required for IPv6	None. Similar to sockaddr, but family field is ss_family instead of sa_family.	N/A
+sockaddr_in		IPv4 addresses		ip(7)						AF_INET
+sockaddr_in6		IPv6 addresses		ipv6(7)						AF_INET6
+Beej's Guide contains additional information on socket API structures.
+
+Building and Parsing Packets
+When dealing with network programming, you need a way to place data into a packet to send and retreive data from a packet you receive. In most cases, the primary function you will use for these operations is memcpy, which copies bytes from one location in memory to another. memcpy enables you to copy bytes between a packet, usually represented as a char array, and other data types. Let's use memcpy to receive two values, a short and an int, and then send two values, a double and a short.
+
+char rx_packet[50]; // Storage to hold the data for recv; could be smaller if these are the only values you will ever receive
+char tx_packet[50]; // Storage to build the packet to send; similarly, could be smaller if only sending the two values
+short rx_short;
+int rx_int;         // short and int to recv
+double tx_double;
+short tx_short;     // double and short to send
+
+// Connection setup for socket s required before send/recv
+
+recv(s, rx_packet, sizeof(rx_short)+sizeof(rx_int), 0);      // Also, check for errors and that you received all the data
+memcpy(&rx_short, rx_packet, sizeof(rx_short));              // short comes first, get it from the packet
+memcpy(&rx_int, rx_packet+sizeof(rx_short), sizeof(rx_int)); // int comes next
+
+// Do something to generate correct values in tx_double and tx_short
+// Ensure you handle endianness correctly in rx and tx values
+
+memcpy(tx_packet, &tx_double, sizeof(tx_double));                 // Put tx_double in the packet to send first
+memcpy(tx_packet+sizeof(tx_double), &tx_short, sizeof(tx_short)); // Then tx_short
+send(s, tx_packet, sizeof(tx_double)+sizeof(tx_short),0);         // Send the values
+
+If you have multiple values in a packet, it may be easier to keep track of a "next byte" pointer or a "packet length" variable to reduce the number of sizeof() calls and simplify the code.
+
+Suggestions
+These are some general hints or suggestions that apply for network programming and often for programming in general.
+
+Tackle your work methodically. Break your task into small steps and proceed by following those steps. Perform each step, test each step, and then move on to the next step. Trying to do everything at once often leads to complicated systems that are much harder to test and debug. Your first step should be some planning, such as pseudocode or a flowchart.
+Use the tools available to you. This not only means a debugger, but other tools that help with viewing what happens in a network. One of the most powerful tools available to you with network programming is Wireshark. Students often waste their time because they fail to check their program operation with Wireshark.
+Let the OS do the work. Don't reinvent the wheel and perform functionality that the OS can provide to you. You should not do things like parse addresses or convert addresses to printable strings; there are functions for that.
+Use defined constants. Magic numbers (literal values in code) make programs hard to maintain and understand. Instead of using 50 in your code, define some variable or macro with a meaningful name and use that. #define in C or const variables in C or C++ are common techniques for avoiding magic numbers.

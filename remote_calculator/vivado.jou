@@ -1,0 +1,20 @@
+#-----------------------------------------------------------
+# Vivado v2023.1 (64-bit)
+# SW Build 3865809 on Sun May  7 15:04:56 MDT 2023
+# IP Build 3864474 on Sun May  7 20:36:21 MDT 2023
+# SharedData Build 3865790 on Sun May 07 13:33:03 MDT 2023
+# Start of session at: Thu Feb  8 23:34:36 2024
+# Process ID: 208984
+# Current directory: /home/lucas/Desktop/programming/Networks/remote_calculator
+# Command line: vivado
+# Log file: /home/lucas/Desktop/programming/Networks/remote_calculator/vivado.log
+# Journal file: /home/lucas/Desktop/programming/Networks/remote_calculator/vivado.jou
+# Running On: acomputer, OS: Linux, CPU Frequency: 800.415 MHz, CPU Physical cores: 8, Host memory: 16446 MB
+#-----------------------------------------------------------
+start_gui
+open_project /home/lucas/Desktop/programming/HighPerformanceComputing/one_bit_branch_predictor/project_1/project_1.xpr
+update_compile_order -fileset sources_1
+launch_simulation
+source BHT_Testbench.tcl
+run all
+close_sim
