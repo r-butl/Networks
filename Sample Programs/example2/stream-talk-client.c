@@ -9,8 +9,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#define SERVER_PORT "5432" // This must match on client and server
-#define BUF_SIZE 256 // This can be smaller. What size?
+#define SERVER_PORT "5432"
+#define MAX_LINE 256
 
 /*
  * Lookup a host IP address and connect to it using service. Arguments match the first two
@@ -23,14 +23,11 @@ int lookup_and_connect( const char *host, const char *service );
 
 int main( int argc, char *argv[] ) {
 	char *host;
-	char buf[BUF_SIZE];
+	char buf[MAX_LINE];
 	int s;
 	int len;
-	int bytes_sent_recv;
-	uint32_t a, b;
-	uint32_t answer;
+	int bytes_sent;
 
-	
 	if ( argc == 2 ) {
 		host = argv[1];
 	}
@@ -39,51 +36,24 @@ int main( int argc, char *argv[] ) {
 		exit( 1 );
 	}
 
-	// Lookup IP and connect to server 
+	/* Lookup IP and connect to server */
 	if ( ( s = lookup_and_connect( host, SERVER_PORT ) ) < 0 ) {
 		exit( 1 );
+	}else{
+		printf("Connected to %d...\n", s);
 	}
-	
 
-	while(1) {
-
-		// Get two numbers (a and b) from the user
-		printf("Enter two number with a space: a b\n");
-		scanf("%u %u", &a, &b);
-
-		printf("%d %d\n", a, b);
-		a = htonl(a);
-		b = htonl(b);
-		
-		// Copy the numbers into a buffer (buf)
-		memcpy(buf, &a, sizeof(a));
-		memcpy(buf + sizeof(a), &b, sizeof(b));
-
-		// Send the buffer to the server using the connected socket. Only send the bytes (8 bytes) for a and b!
-		if( (bytes_sent_recv = send(s, &buf, 2 * sizeof(a), 0)) == -1){	
-			perror("client: send error");
+	/* Main loop: get and send lines of text */
+	while ( fgets( buf, sizeof( buf ), stdin ) ) {
+		buf[MAX_LINE - 1] = '\0';
+		len = strlen( buf ) + 1;
+		if ( ( bytes_sent = send( s, buf, len, 0 ) ) == -1 ) {
+			perror( "stream-talk-client: send" );
 			close( s );
 			exit( 1 );
 		}else{
-			printf("%d bytes sent...\n", bytes_sent_recv);
+			printf("%d bytes sent...\n", bytes_sent);
 		}
-
-		// Receive the sum from the server into a buffer
-		if( (bytes_sent_recv = recv(s, &buf, 1 * sizeof(a), 0)) == -1){
-			perror("client: recv error");
-			close( s );
-			exit( 1 );
-		}else{
-			printf("%d bytes recv...\n", bytes_sent_recv);
-		}
-
-		// Copy the sum out of the buffer into a variable (answer)
-		memcpy(&answer, buf, sizeof(answer));
-
-		answer = ntohl(answer);
-		// Print the sum
-		printf("The answer is... %u\n", answer);
-
 	}
 
 	close( s );
@@ -98,7 +68,7 @@ int lookup_and_connect( const char *host, const char *service ) {
 
 	/* Translate host name into peer's IP address */
 	memset( &hints, 0, sizeof( hints ) );
-	hints.ai_family = AF_UNSPEC;
+	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = 0;
 	hints.ai_protocol = 0;
@@ -107,7 +77,6 @@ int lookup_and_connect( const char *host, const char *service ) {
 		fprintf( stderr, "stream-talk-client: getaddrinfo: %s\n", gai_strerror( s ) );
 		return -1;
 	}
-
 
 	/* Iterate through the address list and try to connect */
 	for ( rp = result; rp != NULL; rp = rp->ai_next ) {
@@ -121,10 +90,12 @@ int lookup_and_connect( const char *host, const char *service ) {
 
 		close( s );
 	}
+
 	if ( rp == NULL ) {
 		perror( "stream-talk-client: connect" );
 		return -1;
 	}
+
 	freeaddrinfo( result );
 
 	return s;
