@@ -45,7 +45,7 @@ int main( int argc, char *argv[] ) {
 	}
 	
 
-	while(1) {
+	while(1) {de 
 
 		// Get two numbers (a and b) from the user
 		printf("Enter two number with a space: a b\n");
@@ -60,7 +60,7 @@ int main( int argc, char *argv[] ) {
 		memcpy(buf + sizeof(a), &b, sizeof(b));
 
 		// Send the buffer to the server using the connected socket. Only send the bytes (8 bytes) for a and b!
-		if( (bytes_sent_recv = send(s, &buf, 8, 0)) == -1){	
+		if( (bytes_sent_recv = send(s, &buf, 2 * sizeof(a), 0)) == -1){	
 			perror("client: send error");
 			close( s );
 			exit( 1 );
@@ -69,7 +69,7 @@ int main( int argc, char *argv[] ) {
 		}
 
 		// Receive the sum from the server into a buffer
-		if( (bytes_sent_recv = recv(s, &buf, 4, 0)) == -1){
+		if( (bytes_sent_recv = recv(s, &buf, 1 * sizeof(a), 0)) == -1){
 			perror("client: recv error");
 			close( s );
 			exit( 1 );
