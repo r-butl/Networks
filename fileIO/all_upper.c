@@ -17,7 +17,7 @@ int main(int argc, char *argv[]){
     char buffer[BATCH_SIZE];
     int bytes_read;
     int bytes_written;
-    const char* output_file = "upper_file";
+    const char* output_file = "upper_file.txt";
     
     if( argc != 2){
         perror("USAGE: ./main <file>\n");
@@ -49,6 +49,7 @@ int main(int argc, char *argv[]){
         for( int i = 0; i < bytes_read; i++){            
             printf("%c", buffer[i]);
 
+	    // Convert to upper case
             if( buffer[i] > 96 && buffer[i] < 123){
                 buffer[i] = buffer[i] - 32;
             }
@@ -61,8 +62,10 @@ int main(int argc, char *argv[]){
             return -1;
         }
     }
+
+    close(input_file_desc);
+    close(output_file_desc);
     printf("done\n");
 
     return 0;
 }
-
